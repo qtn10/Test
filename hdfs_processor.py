@@ -1,10 +1,10 @@
-# data processing program for hdfs.log files
+# data processing program for hdfs_v1.log files
 
 # import libraries
 import pandas as pd
 import numpy as np
 from datetime import datetime
-#import matplotlib.pilot as plt
+import matplotlib.pyplot as plt
 
 # load file 
 DATA_PATH = 'data/HDFS_v1/hdfs.log'
