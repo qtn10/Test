@@ -1,19 +1,16 @@
-# data processing program for BGL log files
+# data transformation program for hdfs_v1.log files to unite them
 
 # import libraries
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
-import re
 
-# load file 1
-DATA_PATH = 'data/bgl.log'
-with open(DATA_PATH, 'r') as log:
-    lines = log.readlines()
+# load csv file
 
-for line in lines:
-    print(line)
+
+#for line in lines:
+#    print(line)
     
 # 
 
