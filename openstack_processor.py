@@ -1,7 +1,7 @@
 # data processing program for openstack log files
 # Steps and purpose:
-# This program was created to conver openstack_normal1 and 2 and abnormal to be
-# cleaned and parsed into csv files with header columns organised based on
+# This program was created to convert a combined openstack_combined.log file
+# into a clean and parsed csv file with header columns organised based on
 # features deemed necessary for data analysis and transformation to compare
 # against the HDFS and BGL log data
 # This program uses Logparser Drain rather than using regex completely manually
@@ -10,13 +10,18 @@
 #   timestamp       - needed to ORDER events and measure time gaps between them
 #   source_file     - which of the 3 input files the line came from
 #   service         - nova-api / nova-compute / nova-scheduler
-#   severity        - log severity as written (INFO, WARNING, ERROR, CRITICAL)
+#   severity        - log severity as numbers 0-3 (INFO, WARNING, ERROR, CRITICAL)
 #   instance_id     - the UUID of the VM this line is about
 #   event_id        - hashid for each distinct event_template,
 #                     matching the style Loghub uses for HDFS and BGL, will be converted
 #                     to E# when all 3 datasets are transformed to fit each other
 #   event_template  - the message with its variable parts masked out
 #   label           - 1 if the VM is listed in anomaly_labels.txt, else 0
+#
+# Citation
+# HasanB 2025, Anomaly Detection in HDFS Logs using Transformer Models and Machine Learning,
+# 4 October, viewed 24 September 2026
+# https://www.youtube.com/watch?v=2uR4amYOgB4
 
 # import libraries
 import os
@@ -31,7 +36,7 @@ VMID = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 parser = LogParser(
     # drain log format - extract features 
     log_format = '<SourceFile> <LogRecord> <Date> <Time> <pID> <Level> <Component> \[<ADDR>\] <Content>',
-    indir='OpenStack/',
+    indir='data/OpenStack/',
     outdir='OpenStack/drain/',
     depth=12, # changed after multiple attempts as this change determines the amt of vm templates we get
     st=0.5,
@@ -69,7 +74,6 @@ df['source_file'] = df['SourceFile']
 df['service'] = df['LogRecord'].str.split('.log').str[0]
 df['severity'] = df['Level'].map({'INFO': 0, 'WARNING': 1, 'ERROR': 2, 'CRITICAL': 3})
 df['instance_id'] = df['Content'].apply(find_instance)
-df = df.dropna(subset=['instance_id'])
 df['label'] = df['instance_id'].isin(anomalous_vms).astype(int)
 df = df.rename(columns={'EventId': 'event_id', 'EventTemplate': 'event_template'})
 
