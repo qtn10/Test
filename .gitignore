@@ -1,0 +1,5 @@
+data/BGL/BGL.log
+data/HDFS_v1/HDFS.log
+data/HDFS_v1/preprocessed/Event_traces.csv
+data/processed/bgl_events.csv
+data/processed/hdfs_events.csv

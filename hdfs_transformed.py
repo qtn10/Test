@@ -40,15 +40,13 @@ TEMPLATES = HDFS_DIR + HDFS_PP + 'HDFS.log_templates.csv'
 LABELS = HDFS_DIR + HDFS_PP + 'anomaly_label.csv'
 MATRIX = HDFS_DIR + HDFS_PP + 'Event_occurrence_matrix.csv'
 
+CHUNK_SIZE = 100000
+
 # output path for final product
 OUT_PATH   = 'data/processed/hdfs_events.csv'
 
 BLOCK_ID   = r'blk_-?\d+'
 SEVERITY_MAP = {'INFO': 0, 'WARN': 1, 'ERROR': 2, 'FATAL': 3}
-
-labels = pd.read_csv(LABELS)
-labels['label'] = (labels['Label'] == 'Anomaly').astype(int) # convert anomaly=1 normal=0
-block_labels = dict(zip(labels['BlockId'], labels['label']))
 
 LINE_PATTERN = re.compile(r'^(\d{6}) (\d{6}) (\d+) (\w+) ([^:]+): (.*)$') # regex for each line in HDFS.log
 
@@ -63,57 +61,83 @@ def template_to_regex(template):
 #test = template_to_regex('[*]Receiving block[*]src:[*]dest:[*]')
 #print(test.pattern)
 
-# match object contains all details needed for analysis, fill it into rows
-rows = []
+labels = pd.read_csv(LABELS)
+labels['label'] = (labels['Label'] == 'Anomaly').astype(int) # convert anomaly=1 normal=0
+block_labels = dict(zip(labels['BlockId'], labels['label']))
 
-with open(LOG_PATH, 'r') as log:
-    for i, line in enumerate(log):
-        line = line.strip() # remove new line issue
-        match = LINE_PATTERN.match(line)
-        if match:
-            rows.append(match.groups())
-
-df = pd.DataFrame(rows, columns=['date', 'time', 'pid', 'level', 'component', 'content'])
-
-df['timestamp'] = df['date'] + ' ' + df['time']
-df['timestamp'] = pd.to_datetime(df['timestamp'], format='%y%m%d %H%M%S')
-
-df['severity'] = df['level'].map(SEVERITY_MAP)
-# print(df.head())
-
-# pull out the block id into instance_id
-df['instance_id'] = df['content'].str.extract('(' + BLOCK_ID + ')', expand=False)
-# print(df[['content', 'instance_id']].head())
-
-df['label'] = df['instance_id'].map(block_labels)
-# print(df.head())
-
-# mapping the E#
 templates = pd.read_csv(TEMPLATES)
-event_patterns = []
-for event_id, template in zip(templates['EventId'], templates['EventTemplate']):
-    event_patterns.append((event_id, template_to_regex(template)))
 
 # if this pattern (defined regex pattern) is in event_patterns,
 # return the event_id - that is the event_id for the event_template
 # if no event found then it will be empty (None)
+event_patterns = []
+for event_id, template in zip(templates['EventId'], templates['EventTemplate']):
+    event_patterns.append((event_id, template_to_regex(template)))
+
+
+# function for mapping E#
 def find_event(content):
     for event_id, pattern in event_patterns:
         if pattern.search(content):
             return event_id
     return None
 
-df['event_id'] = df['content'].apply(find_event) # use find_event function return the E# for the event in 'content'
-#print(df['event_id'].value_counts())
-
 hdfs_templates = dict(zip(templates['EventId'], templates['EventTemplate']))
-df['event_template'] = df['event_id'].map(hdfs_templates)
-df['event_id'] = 'HDFS_' + df['event_id'] # event id will be HDFS_E# as all log files have different events
-#print(df['event_template'].value_counts())
 
-df['event_template'] = df['event_template'].str.replace('[*]', '<*>', regex=False) # converting [*] to <*> to match openstack
-#print(df[['event_id', 'event_template']].drop_duplicates().head(10))
+def process_chunk(rows):
+    df = pd.DataFrame(rows, columns=['date', 'time', 'pid', 'level', 'component', 'content'])
+    df['timestamp'] = df['date'] + ' ' + df['time']
+    df['timestamp'] = pd.to_datetime(df['timestamp'], format='%y%m%d %H%M%S')
+    
+    df['severity'] = df['level'].map(SEVERITY_MAP)
+    #print(df.head())
+    # 
+    # pull out the block id into instance_id
+    df['instance_id'] = df['content'].str.extract('(' + BLOCK_ID + ')', expand=False)
+    # print(df[['content', 'instance_id']].head())
+    df['label'] = df['instance_id'].map(block_labels)
+    # print(df.head())
 
-# final columns, same order as openstack_events.csv
-df = df[['timestamp', 'component', 'severity', 'instance_id', 'event_id', 'event_template', 'label']]
-df.to_csv(OUT_PATH, index=False)
+    df['event_id'] = df['content'].apply(find_event) # use find_event function return the E# for the event in 'content'
+    #print(df['event_id'].value_counts())
+
+    df['event_template'] = df['event_id'].map(hdfs_templates)
+    df['event_id'] = 'HDFS_' + df['event_id'] # event id will be HDFS_E# as all log files have different events
+    #print(df['event_template'].value_counts())
+
+    df['event_template'] = df['event_template'].str.replace('[*]', '<*>', regex=False) # converting [*] to <*> to match openstack
+    #print(df[['event_id', 'event_template']].drop_duplicates().head(10))
+
+    # final columns, same order as openstack_events.csv
+    df = df[['timestamp', 'component', 'severity', 'instance_id', 'event_id', 'event_template', 'label']]
+    return df
+
+# match object contains all details needed for analysis, fill it into rows
+rows = []
+first_chunk = True
+
+# have to do program in chunks as HDFS had too many lines
+with open(LOG_PATH, 'r') as log:
+    for line in log:
+        line = line.strip() # remove new line issue
+        match = LINE_PATTERN.match(line)
+        if match:
+            rows.append(match.groups())
+        if len(rows) == CHUNK_SIZE:
+            df = process_chunk(rows)
+            if first_chunk:
+                df.to_csv(OUT_PATH, mode='w', header=True, index=False) # first line 
+            else:
+                df.to_csv(OUT_PATH, mode='a', header=False, index=False) # change mode and header to ensure no overwrites or repeated headers
+            first_chunk = False
+            rows = []
+            print('chunk written' + '\n')
+
+# process for last chunk
+if rows:
+    df = process_chunk(rows)
+    if first_chunk:
+        df.to_csv(OUT_PATH, mode='w', header=True, index=False)
+    else:
+        df.to_csv(OUT_PATH, mode='a', header=False, index=False)
+    print('last chunk written')
