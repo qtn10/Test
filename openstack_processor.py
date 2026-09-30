@@ -6,8 +6,8 @@
 # against the HDFS and BGL log data
 # This program uses Logparser Drain rather than using regex completely manually
 # 
-# Final columns and why each one exists:
-#   timestamp       - needed to ORDER events and measure time gaps between them
+# chosen columns and reasoning:
+#   timestamp       - needed to track time ranges and comparing anomalies over time
 #   component       - drain component e.g. nova.compute.manager
 #   severity        - log severity as numbers 0-3 (INFO, WARNING, ERROR, CRITICAL)
 #   instance_id     - the UUID of the VM this line is about
@@ -79,14 +79,22 @@ os_events = dict(zip(templates['EventId'], templates['osevent_id']))
 
 # adding our own columns as described above into a pandas DataFrame
 df = pd.read_csv(DRAIN_OUT + 'openstack_combined.log_structured.csv')
+
 df['timestamp'] = df['Date'] + ' ' + df['Time']
+df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y-%m-%d %H:%M:%S.%f')
+df['timestamp'] = df['timestamp'].dt.floor('s')
+
 df['severity'] = df['Level'].map({'INFO': 0, 'WARNING': 1, 'ERROR': 2, 'CRITICAL': 3})
 df['instance_id'] = df['Content'].apply(find_instance)
+
 df['label'] = df['instance_id'].isin(anomalous_vms).astype('Int64') # changed from int to Int64 because we need empty value
 df.loc[df['instance_id'].isna(), 'label'] = pd.NA # label set to unkown
+
 df = df.rename(columns={'EventId': 'event_id', 'EventTemplate': 'event_template'})
 df['event_id'] = df['event_id'].map(os_events) # from templates
+
 templates.to_csv(DRAIN_OUT + 'openstack_templates.csv', index=False) 
+
 df = df[['timestamp', 'component', 'severity', 'instance_id', 'event_id', 'event_template', 'label']]
 df.to_csv(OUTPUT_FOLDER + 'openstack_events.csv', index=False)
 #print(df['label'].value_counts(dropna=False)) # testing line to confirm unknown values exist

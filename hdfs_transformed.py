@@ -10,8 +10,7 @@
 # clustering accuracy in later stages of the model's creation
 #
 # chosen columns and reasoning:
-#   timestamp       - needed to ORDER events and measure time gaps between them
-#                    
+#   timestamp       - needed to track time ranges and comparing anomalies over time
 #   component       - hdfs bgl and openstack have it (component field in raw log of hdfs and bgl, service in openstack)
 #   severity        - log severity as 0-3 (INFO, WARN, ERROR, FATAL)
 #   instance_id     - the HDFS block ID
@@ -34,6 +33,7 @@
 import pandas as pd
 import numpy as np
 import re
+import datetime
 
 HDFS_DIR = 'data/HDFS_v1/'
 HDFS_PP = 'preprocessed/'
@@ -55,17 +55,29 @@ block_labels = dict(zip(labels['BlockId'], labels['label']))
 
 LINE_PATTERN = re.compile(r'^(\d{6}) (\d{6}) (\d+) (\w+) ([^:]+): (.*)$') # regex for each line in HDFS.log
 
-###
-# TO DO: 
-# make loop into HDFS.log to check for LINE_PATTERN.match in HDFS.log
-# checking hdfs file first before going thru whole file
-###
+# match object contains all details needed for analysis, fill it into rows
+rows = []
+
 with open(LOG_PATH, 'r') as log:
     for i, line in enumerate(log):
-        if i == 3: # only checking 3 log lines
-           break
         line = line.strip() # remove new line issue
+        if i == 10000: ## for testing, remove when done
+            break ## for testing, remove when done
         match = LINE_PATTERN.match(line)
         if match:
-            date, time, pid, level, component, content = match.groups()
-            print(date, time, '\n', pid, '\n', level, '\n', component, '\n', content)
+            rows.append(match.groups())
+
+df = pd.DataFrame(rows, columns=['date', 'time', 'pid', 'level', 'component', 'content'])
+
+df['timestamp'] = df['date'] + ' ' + df['time']
+df['timestamp'] = pd.to_datetime(df['timestamp'], format='%y%m%d %H%M%S')
+
+df['severity'] = df['level'].map(SEVERITY_MAP)
+# print(df.head())
+
+# pull out the block id into instance_id
+df['instance_id'] = df['content'].str.extract('(' + BLOCK_ID + ')', expand=False)
+# print(df[['content', 'instance_id']].head())
+
+df['label'] = df['instance_id'].map(block_labels)
+# print(df.head())
