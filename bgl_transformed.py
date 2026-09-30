@@ -3,11 +3,8 @@
 # import libraries
 import pandas as pd
 import numpy as np
-from datetime import datetime
-import matplotlib.pyplot as plt
+import datetime
 
-# load file 1
-DATA_PATH = 'data/bgl.log'
 with open(DATA_PATH, 'r') as log:
     lines = log.readlines()
 
