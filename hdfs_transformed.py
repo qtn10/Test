@@ -58,9 +58,14 @@ LINE_PATTERN = re.compile(r'^(\d{6}) (\d{6}) (\d+) (\w+) ([^:]+): (.*)$') # rege
 ###
 # TO DO: 
 # make loop into HDFS.log to check for LINE_PATTERN.match in HDFS.log
+# checking hdfs file first before going thru whole file
 ###
-# for line in 
-# match = LINE_PATTERN.match(line)
-#if match:
-#    date, time, pid, level, component, content = match.groups()
-#print(line)
+with open(LOG_PATH, 'r') as log:
+    for i, line in enumerate(log):
+        if i == 3: # only checking 3 log lines
+           break
+        line = line.strip() # remove new line issue
+        match = LINE_PATTERN.match(line)
+        if match:
+            date, time, pid, level, component, content = match.groups()
+            print(date, time, '\n', pid, '\n', level, '\n', component, '\n', content)

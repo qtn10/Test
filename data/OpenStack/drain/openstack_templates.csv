@@ -1,0 +1,49 @@
+EventId,EventTemplate,Occurrences,osevent_id
+bd2f529c,"<*> ""GET <*>HTTP<*>status: <*> len: <*> time: <*>.<*>",90475,OS_E1
+9890bb2a,image <*> at (<*>checking,12043,OS_E2
+b6dce2aa,"image <*> at (<*>in use: on this node <*> local, <*> on other nodes sharing this instance storage",12043,OS_E3
+6efc59a2,Active base files: /var/lib/nova/instances/_base/<*><*>ac<*>e<*>,12035,OS_E4
+e7c5c93a,"<*> ""POST <*>HTTP<*>status: <*> len: <*> time: <*>.<*>",6194,OS_E5
+16b764ff,[instance: <*>] VM Resumed (Lifecycle Event),4132,OS_E6
+47f4680b,[instance: <*>] During sync_power_state the instance has a pending task <*> Skip.,4053,OS_E7
+973fa81e,Removable base files: /var/lib/nova/instances/_base/<*><*>ac<*>e<*>,3059,OS_E8
+66405896,Unknown base file: /var/lib/nova/instances/_base/<*><*>ac<*>e<*>,3059,OS_E9
+74098f89,[instance: <*>] VM Stopped (Lifecycle Event),2067,OS_E10
+e62ddd64,[instance: <*>] VM Started (Lifecycle Event),2066,OS_E11
+f48a8d5e,[instance: <*>] Took <*>.<*> seconds to spawn the instance on the hypervisor.,2066,OS_E12
+9b22184f,[instance: <*>] Took <*>.<*> seconds to build instance.,2066,OS_E13
+50e0ef31,[instance: <*>] Creating image,2066,OS_E14
+796fd834,[instance: <*>] Instance spawned successfully.,2066,OS_E15
+3f57c2b3,[instance: <*>] VM Paused (Lifecycle Event),2066,OS_E16
+3b70c34a,Creating event network-vif-plugged:<*> for instance <*>,2065,OS_E17
+ad03d9ef,[instance: <*>] Claim successful,2065,OS_E18
+1c72f1dd,"[instance: <*>] vcpu limit not specified, defaulting to unlimited",2065,OS_E19
+91366665,"[instance: <*>] Total vcpu: <*> VCPU, used: <*>.<*> VCPU",2065,OS_E20
+b6262c55,"[instance: <*>] disk limit not specified, defaulting to unlimited",2065,OS_E21
+8b6426f0,"[instance: <*>] Total disk: <*> GB, used: <*>.<*> GB",2065,OS_E22
+7fb27280,"[instance: <*>] memory limit: <*>.<*> MB, free: <*>.<*> MB",2065,OS_E23
+7edc5291,"[instance: <*>] Total memory: <*> MB, used: <*>.<*> MB",2065,OS_E24
+649b9389,"[instance: <*>] Attempting claim: memory <*> MB, disk <*> GB, vcpus <*> CPU",2065,OS_E25
+2ae03bfe,[instance: <*>] Took <*>.<*> seconds to deallocate network for instance.,2065,OS_E26
+3399889b,Removing base or swap file: /var/lib/nova/instances/_base/<*><*>ac<*>e<*>,2064,OS_E27
+66acd71e,HTTP exception thrown: No instances found for any event,2064,OS_E28
+a7fe5e13,[instance: <*>] Took <*>.<*> seconds to destroy the instance on the hypervisor.,2064,OS_E29
+fe5baa10,[instance: <*>] Deletion of <*>complete,2064,OS_E30
+fb3c7a48,[instance: <*>] Deleting instance files /var/lib/nova/instances/<*>_del,2064,OS_E31
+93995b30,[instance: <*>] Instance destroyed successfully.,2064,OS_E32
+06476222,[instance: <*>] Terminating instance,2064,OS_E33
+b07a374b,"<*> ""DELETE <*>HTTP<*>status: <*> len: <*> time: <*>.<*>",2064,OS_E34
+304a219c,Auditing locally available compute resources for node cp-<*>.slowvm<*>.tcloud-pg<*>.utah.cloudlab.us,1739,OS_E35
+f436579e,"Total usable vcpus: <*>, total allocated vcpus: <*>",1739,OS_E36
+5935193a,Final resource view: name=cp-<*>.slowvm<*>.tcloud-pg<*>.utah.cloudlab.us phys_ram=<*>MB used_ram=<*>MB phys_disk=<*>GB used_disk=<*>GB total_vcpus=<*> used_vcpus=<*> pci_stats=[],1739,OS_E37
+9d6775a4,Compute_service record updated for cp-<*>.slowvm<*>.tcloud-pg<*>.utah.cloudlab.us:cp-<*>.slowvm<*>.tcloud-pg<*>.utah.cloudlab.us,1739,OS_E38
+7554075d,Base or swap file too young to remove: /var/lib/nova/instances/_base/<*><*>ac<*>e<*>,995,OS_E39
+732653ea,Successfully synced instances from host 'cp-<*>.slowvm<*>.tcloud-pg<*>.utah.cloudlab.us'.,502,OS_E40
+41c623ba,The instance sync for host 'cp-<*>.slowvm<*>.tcloud-pg<*>.utah.cloudlab.us' did not match. Re-created its InstanceList.,364,OS_E41
+7d8b6b51,"While synchronizing instance power states, found <*> instances in the database and <*> instances on the hypervisor.",45,OS_E42
+535d418b,Running instance usage audit for host cp-<*>.slowvm<*>.tcloud-pg<*>.utah.cloudlab.us from <*>-<*>-<*> <*>:<*>:<*> to <*>-<*>-<*> <*>:<*>:<*>. <*> instances.,30,OS_E43
+63e82264,"couldn't obtain the vcpu count from domain id: <*>, exception: Requested operation is not valid: cpu affinity is not supported",12,OS_E44
+f5c027b5,Error during ComputeManager._run_image_cache_manager_pass,8,OS_E45
+7ca28619,Bad response code while validating token: <*>,2,OS_E46
+e8fe07dd,"Identity response: <!DOCTYPE HTML PUBLIC ""-<*>HTML <*>.<*>//EN"">",2,OS_E47
+c28159fd,Unable to validate token: Failed to fetch token data from identity server,2,OS_E48
