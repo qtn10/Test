@@ -2,9 +2,9 @@
 
 **Internal team checklist only — not a submitted deliverable.** Maps current repo state to the assignment spec and rubric so the team can see what's done and what's left.
 
-**Due: Sunday 11:59pm AEST, 07/10/2026 (Week 8)** — *last updated 2026-10-06.*
+**Due: 11:59pm AEST, 07/10/2026** — *last updated 2026-10-06 20:05 AEDT, ~28 hours left (note: deadline is stated in AEST but we're currently on AEDT/daylight time, 1hr ahead — don't cut it to the literal last minute on your local clock).*
 
-> ⚠️ Still very tight on time. Core pipeline + both required models now run end-to-end on the real, full dataset (16.1M rows across HDFS/BGL/OpenStack). Report, readme, analysis/visualizations, innovation items, meeting minutes, and contribution form are still outstanding.
+> Core pipeline + both required models run end-to-end on the real, full dataset and are committed (commit `b7b7cc1`). Report has real content for Data Collection/Processing/Model Selection/Implementation. Still outstanding: Data Analysis section, Intro/Problem Framing/Conclusion (team), Innovation items, meeting minutes, contribution form, and resolving what actually goes in the submission zip (see #3 below — the full processed data is 1.9GB, too big to submit as-is).
 
 ---
 
@@ -30,16 +30,16 @@ File naming reminder: submit as `session-xx-group-7-AssignmentName.pdf` etc. (pe
 |---|---|---|
 | Data collection & processing explanation | 3 | 🟢 Written up in `REPORT.md` with real figures from the actual run |
 | Data analysis explanation | 2 | ❌ No analysis/visualization write-up yet (anomaly rate, anomalies over time, severity vs label, etc.) |
-| Model selection justification | 2 | 🟡 Models exist and run; the *why* (why random forest/logistic regression, why KMeans, alternatives considered) still needs writing in the report by the team |
-| Writing quality & structure | 1 | 🟡 In progress |
-| Harvard referencing | 1 | 🟢 Dataset citations in `REPORT.md` bibliography |
-| Completeness (all sections) | 1 | ❌ Several sections still TODO for team (intro, problem framing, implementation, conclusion) |
+| Model selection justification | 2 | 🟢 Written up in `REPORT.md` §5 — why RF over LR (non-linear feature interactions), why KMeans restricted to the anomaly class, with real comparison numbers |
+| Writing quality & structure | 1 | 🟡 Finished sections read cleanly; still has visible TODO markers for team-owned sections |
+| Harvard referencing | 1 | 🟢 Dataset + method citations (Loghub, DeepLog, Drain) in `REPORT.md` bibliography |
+| Completeness (all sections) | 1 | 🟡 Data Collection/Processing/Model Selection/Implementation done; Intro, Problem Framing, Data Analysis, Conclusion, cover info still TODO (team-owned — motivation/reflection isn't something to fill in for them) |
 
 ### Source code execution (15 pts)
 | Criterion | Pts | Status |
 |---|---|---|
-| Core functionality (data pipeline + both model types) | 7 | 🟢 **Both required model types now implemented and verified running on the real unified dataset.** Classification: logistic regression + random forest, precision/recall/F1 reported (label is ~4% positive after unification, less extreme than OpenStack alone at ~0.2%). Clustering: KMeans within the anomaly class only (label excluded from features), k picked by silhouette score, found a real distinction — a small cluster (5,205 rows) of rare high-severity BGL kernel panics after long idle gaps vs. a large cluster (631,617 rows) of frequent, tighter-interval anomalies. |
-| Datasets (clean, relevant, correct format) | 3 | 🟢 `unified_events.csv` built from real raw logs (not samples), consistent schema, `dataset` column added |
+| Core functionality (data pipeline + both model types) | 7 | 🟢 **Both required model types implemented, verified, and committed, with real results.** Classification: RF beats LR on the anomaly class (F1 0.613 vs 0.360, precision 0.597 vs 0.264, recall 0.629 vs 0.566) on a stratified 2M-row sample (full 16M rows exceeded this machine's RAM — justified compute trade-off, written up in §6.1). Clustering: KMeans within the anomaly class only, k=2 by silhouette (0.981) — a small cluster (5,205 rows) of rare high-severity BGL kernel panics after ~47-day gaps vs. a large cluster (631,617 rows) of frequent, near-average-severity anomalies. |
+| Datasets (clean, relevant, correct format) | 3 | 🟡 `unified_events.csv` (16.1M rows) built from real raw logs, consistent schema — but it's **1.9GB**, too big for the submission zip as-is and too big for git (gitignored). Need to decide what actually goes in the submitted zip: likely the 2M-row stratified sample actually used for training, not the full dump. See action item below. |
 | Readme | 1 | 🟢 Done, needs PDF/MD export check before submission |
 | Code comments | 2 | 🟢 Strong — scripts are well-commented with column rationale |
 | Code structure | 2 | 🟢 Reorganized into `src/processing/` + `src/models/`, duplicate root-level `BGL/`/`HDFS_v1/`/`OpenStack/` folders (405MB) + dead `openstack_transformed.py` staged for deletion (`git rm` already run, not yet committed). READMEs added in every folder. |
@@ -64,12 +64,14 @@ File naming reminder: submit as `session-xx-group-7-AssignmentName.pdf` etc. (pe
 
 ## 4. Immediate next steps (suggested order)
 
-1. **Commit the current working tree** — cleanup (`git rm`), reorg (`git mv`), new scripts, new READMEs are all staged/untracked but not committed yet.
-2. **Data analysis write-up** — anomaly rate, anomalies over time, common events, severity vs label, anomalies per component — turn the model outputs already produced into the report's Data Analysis section with a couple of charts.
-3. **Write Model Selection + Implementation sections in `REPORT.md`** — the *why* behind the model choices, now that there's real output to describe.
-4. **Harder evaluation + error analysis** (Innovation #4, 3 pts) — e.g. split by dataset (train on HDFS+BGL, test on OpenStack) or by time period, then manually inspect a handful of false positives/negatives.
-5. **Second untaught model** (Innovation #3, 4 pts) if time allows — compare against the random forest baseline on the same test set.
-6. **Readme, meeting minutes, contribution form** — finalize formats (PDF) for submission.
+1. ~~Commit the current working tree~~ — done, commit `b7b7cc1`.
+2. ~~Write Model Selection + Implementation sections in `REPORT.md`~~ — done, with real numbers.
+3. **Decide what goes in the submission zip's dataset folder** — the full `unified_events.csv` is 1.9GB, not realistic to submit. Likely answer: export the actual 2,000,000-row stratified sample the models trained on (add a `to_csv` of that sample in the scripts) rather than the full row-level dump.
+4. **Data analysis write-up** — anomaly rate, anomalies over time, common events, severity vs label, anomalies per component — needs a couple of charts for the report's Data Analysis section (2 pts, currently 0).
+5. **Harder evaluation + error analysis** (Innovation #4, 3 pts) — e.g. split by dataset (train on HDFS+BGL, test on OpenStack) or by time period, then manually inspect a handful of false positives/negatives from the random forest run.
+6. **Second untaught model** (Innovation #3, 4 pts) if time allows — compare against the random forest baseline on the same test set.
+7. **Team-owned writing** — Introduction, Problem Framing, Conclusion, cover info in `REPORT.md`.
+8. **Readme, meeting minutes, contribution form** — finalize formats (PDF) for submission.
 
 ## 5. Open questions to raise with the team / tutor
 
