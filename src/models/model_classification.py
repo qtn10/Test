@@ -18,6 +18,17 @@
 #   seconds_since_prev_event   - time gap since this instance's previous log line;
 #                                unusually long stalls or bursts of activity are a
 #                                known anomaly signal in distributed system logs
+#   prev_event_id              - one-hot, the previous event this instance logged.
+#                                a simplified, single-step version of DeepLog's
+#                                sequence modelling (Du et al. 2017): DeepLog predicts
+#                                the next event from a short history of prior events,
+#                                and flags a prediction mismatch as anomalous. this
+#                                feature gives a tree-based model the same short-range
+#                                sequence context in a form it can split on directly
+#   avg_gap_last_3              - rolling mean of seconds_since_prev_event over this
+#                                instance's last 3 events; smooths out one-off noisy
+#                                gaps to capture a short-term pace (bursty vs stalled)
+#                                rather than a single potentially-noisy interval
 #
 # two models are trained and compared: logistic regression as an interpretable
 # baseline, random forest as the stronger non-linear model
@@ -53,8 +64,26 @@ df['seconds_since_prev_event'] = (
     df.groupby('instance_id')['timestamp'].diff().dt.total_seconds().fillna(0)
 )
 df['hour_of_day'] = df['timestamp'].dt.hour
+df['prev_event_id'] = df.groupby('instance_id')['event_id'].shift(1).fillna('NONE')
+df['avg_gap_last_3'] = (
+    df.groupby('instance_id')['seconds_since_prev_event']
+      .rolling(window=3, min_periods=1).mean()
+      .reset_index(level=0, drop=True)
+)
+# rows with no resolvable instance_id (e.g. BGL lines with an unknown node) are
+# dropped entirely by groupby before rolling, then come back as NaN on reassignment -
+# fillna has to run on the real column, after alignment, not inside the chain above
+df['avg_gap_last_3'] = df['avg_gap_last_3'].fillna(0)
 
-FEATURES = ['severity', 'component', 'event_id', 'hour_of_day', 'seconds_since_prev_event']
+# the full unified_events.csv (1.9GB) is too big to submit - this sample, with the
+# engineered features included, is the actual data the final model is trained/
+# evaluated on, so it's what belongs in the submission zip's dataset folder instead
+df.to_csv('data/processed/training_sample.csv', index=False)
+
+FEATURES = [
+    'severity', 'component', 'event_id', 'hour_of_day',
+    'seconds_since_prev_event', 'prev_event_id', 'avg_gap_last_3',
+]
 X = df[FEATURES]
 y = df['label']
 
@@ -63,7 +92,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 preprocess = ColumnTransformer([
-    ('cat', OneHotEncoder(handle_unknown='ignore'), ['component', 'event_id']),
+    ('cat', OneHotEncoder(handle_unknown='ignore'), ['component', 'event_id', 'prev_event_id']),
 ], remainder='passthrough')
 
 models = {
