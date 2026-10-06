@@ -1,5 +1,5 @@
 # one-off script to generate the Data Analysis section's charts for REPORT.md
-# not part of the modelling pipeline - run manually, writes PNGs to ../figures/
+# not part of the modelling pipeline - run manually, writes PNGs to figures/
 #
 # colors: validated categorical palette (blue/orange/aqua - the first 3 slots of
 # the reference palette, which clear colorblind-safety checks for all pairwise
@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 BLUE, ORANGE, AQUA, RED = '#2a78d6', '#eb6834', '#1baf7a', '#e34948'
-FIG_DIR = '../../figures/'  # code/COS30049-Project -> code -> assignment-023/figures
+FIG_DIR = 'figures/'  # repo root/figures - run this script from the repo root
 
 df = pd.read_csv('data/processed/unified_events.csv', parse_dates=['timestamp'])
 labelled = df.dropna(subset=['label']).copy()

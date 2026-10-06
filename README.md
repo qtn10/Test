@@ -12,7 +12,8 @@ data/
   processed/                   output of src/processing/ scripts (per-dataset + unified events)
 src/
   processing/                  parses each dataset's raw logs into a shared schema, then unifies them
-  models/                      classification + clustering models trained on the unified data
+  models/                      classification, clustering, and comparison models trained on the unified data
+figures/                       charts for REPORT.md's Data Analysis section
 ```
 
 ## Setup
@@ -37,6 +38,10 @@ All commands run from the repo root (scripts reference `data/...` relative to th
 .venv/bin/python src/processing/bgl_transformed.py        # -> data/processed/bgl_events.csv
 .venv/bin/python src/processing/final_transformer.py      # unifies all 3 -> data/processed/unified_events.csv
 
-.venv/bin/python src/models/model_classification.py       # trains + evaluates classification models
+.venv/bin/python src/models/model_classification.py       # trains + evaluates classification models (also writes data/processed/training_sample.csv)
 .venv/bin/python src/models/model_clustering.py           # clusters the anomaly class, describes each cluster
+.venv/bin/python src/models/model_isolation_forest.py     # unsupervised comparison model, same split/features as the random forest
+.venv/bin/python src/models/error_analysis.py              # harder held-out-dataset evaluation (train HDFS+BGL, test OpenStack) + manual error inspection
+
+.venv/bin/python src/analysis_charts.py                    # generates the Data Analysis section's charts into figures/
 ```
