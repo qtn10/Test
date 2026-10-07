@@ -41,6 +41,7 @@ All commands run from the repo root (scripts reference `data/...` relative to th
 .venv/bin/python src/models/model_classification.py       # trains + evaluates classification models (also writes data/processed/training_sample.csv)
 .venv/bin/python src/models/model_clustering.py           # clusters the anomaly class, describes each cluster
 .venv/bin/python src/models/model_isolation_forest.py     # unsupervised comparison model, same split/features as the random forest
+.venv/bin/python src/models/model_gradient_boosting.py    # second non-taught comparison model, same split as the random forest
 .venv/bin/python src/models/error_analysis.py              # harder held-out-dataset evaluation (train HDFS+BGL, test OpenStack) + manual error inspection
 
 .venv/bin/python src/analysis_charts.py                    # generates the Data Analysis section's charts into figures/

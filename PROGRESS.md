@@ -2,9 +2,9 @@
 
 **Internal team checklist only — not a submitted deliverable.** Maps current repo state to the assignment spec and rubric so the team can see what's done and what's left.
 
-**Due: 11:59pm AEST, 07/10/2026** — *last updated 2026-10-06 ~23:40 AEDT (note: deadline is stated in AEST but we're currently on AEDT/daylight time, 1hr ahead — don't cut it to the literal last minute on your local clock).*
+**Due: 11:59pm AEST, 07/10/2026** — *last updated 2026-10-07 00:40 AEDT (note: deadline is stated in AEST but we're currently on AEDT/daylight time, 1hr ahead — don't cut it to the literal last minute on your local clock).*
 
-> All 4 rubric-graded pieces of code work are done with real results, committed and pushed to `origin/main` (commit `50ebf61`): core pipeline, both required models, the error-analysis/held-out evaluation, and a non-taught model (Isolation Forest), plus 2 extra engineered features (`prev_event_id`, `avg_gap_last_3`) that measurably improved the random forest (F1 0.613→0.666). Report has real content for everything except the team-owned sections. **Everything left is either team-only writing (Introduction, Problem Framing, Conclusion, cover info) or non-coding deliverables (readme PDF export, meeting minutes, contribution form)** — there isn't much more I can usefully do solo from here.
+> All 4 rubric-graded pieces of code work are done with real results: core pipeline, both required models, the error-analysis/held-out evaluation, and **two** non-taught models (Isolation Forest + Gradient Boosting — the rubric wants at least 2 for full marks on that criterion), plus 2 extra engineered features (`prev_event_id`, `avg_gap_last_3`) that measurably improved the random forest (F1 0.613→0.666). Report has real content for everything except the team-owned sections. **The Gradient Boosting addition is not yet committed/pushed** — everything up to and including commit `50ebf61` is on `origin/main`, but the figures-move commit and this latest model are still local, see §4. **After that, everything left is either team-only writing (Introduction, Problem Framing, Conclusion, cover info) or non-coding deliverables (readme PDF export, meeting minutes, contribution form)** — there isn't much more I can usefully do solo from here.
 
 ---
 
@@ -49,7 +49,7 @@ File naming reminder: submit as `session-xx-group-7-AssignmentName.pdf` etc. (pe
 |---|---|---|
 | Additional data + transformation | 4 | ❌ **Confirmed**: HDFS/BGL/OpenStack are all inside the one Zenodo base bundle (record 8196385) — doesn't count as "additional". Email tutor to confirm this reading; don't chase a 4th dataset unless they say otherwise. |
 | Feature extraction research | 4 | 🟢 **Done.** 4 engineered features beyond the raw schema (`hour_of_day`, `seconds_since_prev_event`, `prev_event_id`, `avg_gap_last_3`), each justified against DeepLog's sequence/timing approach in `REPORT.md` §4. Not just theoretical — adding the last two measurably improved random forest F1 from 0.613 to 0.666 on the same test set, real evidence the features capture structure rather than noise. |
-| Model beyond the unit | 4 | 🟢 **Done.** Isolation Forest (`src/models/model_isolation_forest.py`) added and compared against the random forest baseline on the identical train/test split — F1 0.026 vs 0.666. The gap is explained, not hand-waved: Isolation Forest is unsupervised (no labels during training) so it's a structurally harder task, and interestingly it got *worse* (not better) with the extra features that helped random forest — a real, explained finding about high-dimensional categorical data diluting its random splits. Written up in `REPORT.md` §6 + §7.2. |
+| Model beyond the unit | 4 | 🟢 **Full marks tier now** (rubric wants *at least 2* non-taught models for full credit, not 1). Isolation Forest (F1 0.026 — explained: unsupervised, structurally harder task, degrades with more one-hot dimensions) and Gradient Boosting (F1 0.508, but with the *highest recall of any model*, 0.703 — a real precision/recall trade-off against random forest, not just "worse"). Both compared against the random forest baseline on the identical split, both with clear reasoning. Written up in `REPORT.md` §6 + §7.2. |
 | Evaluation design + error analysis | 3 | 🟢 **Done.** `src/models/error_analysis.py` trains on HDFS+BGL only, tests on the fully held-out OpenStack dataset — anomaly precision/recall/F1 all drop to 0.000 (model predicts zero anomalies), vs. 0.998 accuracy, a clear illustration of why accuracy is misleading here. Manual inspection of the false negatives explains why: `component`/`event_id` are dataset-specific one-hot categories with zero vocabulary overlap across systems, so the model has no usable signal left for an unseen system. Written up in `REPORT.md` §7.2. |
 
 ---
@@ -62,6 +62,7 @@ File naming reminder: submit as `session-xx-group-7-AssignmentName.pdf` etc. (pe
 - `src/models/model_clustering.py` — **done and verified**, clusters the anomaly class only, reports a real, describable 2-cluster split (see above).
 - `src/models/error_analysis.py` — **done and verified**, held-out-dataset evaluation (train HDFS+BGL, test OpenStack) + manual false positive/negative inspection.
 - `src/models/model_isolation_forest.py` — **done and verified**, unsupervised comparison model, same split/features as the random forest.
+- `src/models/model_gradient_boosting.py` — **done and verified**, second non-taught model, needed frequency-bucketed categoricals (not one-hot) due to `HistGradientBoostingClassifier`'s 255-category cap.
 - `src/analysis_charts.py` — **done**, generates the 4 Data Analysis charts into `figures/` (now inside the repo).
 - Repo reorganized: `src/processing/`, `src/models/`, READMEs in every folder, `mise.toml` + `requirements.txt` for environment setup, duplicate data folders removed (committed and pushed).
 
@@ -72,10 +73,11 @@ File naming reminder: submit as `session-xx-group-7-AssignmentName.pdf` etc. (pe
 3. ~~Decide what goes in the submission zip's dataset folder~~ — done, `training_sample.csv`.
 4. ~~Harder evaluation + error analysis~~ (Innovation #4, 3 pts) — done, see §7.2 in `REPORT.md`.
 5. ~~Data analysis write-up~~ — done, see §5 + `figures/` (now inside the repo) in `REPORT.md`.
-6. ~~Second untaught model~~ (Innovation #3, 4 pts) — done, Isolation Forest, see §6 + §7.2 in `REPORT.md`.
-7. ~~Commit + push these latest changes~~ — done, commit `50ebf61` on `origin/main`. `figures/` was also moved inside the repo (was outside, alongside `REPORT.md`) and `README.md` updated to list all 6 scripts in `src/`.
-8. **Team-owned writing** — Introduction, Problem Framing, Conclusion, cover info in `REPORT.md`. This is genuinely the main thing left.
-9. **Meeting minutes, contribution form** — not started, team-owned.
+6. ~~Second untaught model~~ (Innovation #3, 4 pts) — done. Isolation Forest + **Gradient Boosting** (added after the team flagged a concern about logistic regression that turned out not to be rubric-supported — see commit history/chat; added a second non-taught model regardless since the rubric wants 2 for full marks, which we only just noticed). See §6 + §7.2 in `REPORT.md`.
+7. ~~Move figures into repo, refresh READMEs~~ — done, commit `50ebf61` on `origin/main`.
+8. **Commit + push `model_gradient_boosting.py` and the REPORT.md/README updates for it** — staged locally, not yet committed.
+9. **Team-owned writing** — Introduction, Problem Framing, Conclusion, cover info in `REPORT.md`. This is genuinely the main thing left.
+10. **Meeting minutes, contribution form** — not started, team-owned.
 
 ## 5. Open questions to raise with the team / tutor
 
